@@ -1,0 +1,108 @@
+from typing import Dict
+from fastapi import Response
+from loguru import logger
+from http import HTTPStatus
+
+from src.common.functions import get_uuid, validate_email
+from src.database.database import Database
+from src.model.customer import Customer
+from src.schema.customer import PostCustomerPayload
+from src.schema.customer import GetCustomerResponse
+from src.schema.customer import PutCustomerPayload
+from src.schema.exceptions import InvalidEmailError
+from src.constants import APPLICATION_JSON
+
+
+class CustomerController:
+    
+    def __init__(self):
+        pass
+
+    @property
+    def __database(self) -> Database:
+        return Database()
+    
+    @staticmethod
+    def __validate_email(email: str) -> str | InvalidEmailError:
+        normalized_email = validate_email(email)
+        if not normalized_email:
+            raise InvalidEmailError("Invalid email")
+        return normalized_email
+    
+    def __insert_customer(self, customer_data: PostCustomerPayload, normalized_email: str) -> Dict:
+        customer_model = Customer(
+                customer_id= get_uuid(),
+                name=customer_data.name,
+                email=normalized_email
+            )
+        self.__database.customers.insert(customer_model)
+        message = "Customer created successfully"
+        logger.info(message)
+        success = {"message": message, "customer_id": str(customer_model.customer_id)}
+        return success
+    
+    def create_customer(self, customer_data: PostCustomerPayload) -> Response:
+        error = {"error": "Failed to create customer"}
+        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+        try:
+            error = {"error": "Invalid email"}
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
+            normalized_email = self.__validate_email(customer_data)
+            success = self.__insert_customer(customer_data, normalized_email)
+            response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
+        except InvalidEmailError as invalid_email_error:
+            logger.exception(f"Email validation failed: {invalid_email_error}")
+        except Exception as e:
+            logger.exception(f"Failed to create customer: {e}")
+        finally:
+            return response
+
+    def get_customer(self, customer_id: str) -> Response:
+        error = {"error": "Failed to retrieve customer"}
+        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+        try:
+            error = {"error": "Customer not found"}
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+            customer = self.__database.customers.get_by_id(customer_id)
+            if customer:
+                result = GetCustomerResponse(**customer.get())
+                response = Response(content=result.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+                logger.info("Customer retrieved successfully")
+        except Exception as e:
+            logger.exception(f"Failed to retrieve customer: {e}")
+        finally:
+            return response
+
+    def update_customer(self, customer_id: str, customer_data: PutCustomerPayload) -> Response:
+        error = {"error": "Failed to update customer"}
+        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+        try:
+            error = {"error": "Customer not found"}
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+            existing_customer = self.__database.customers.get_by_id(customer_id)
+            if existing_customer:
+                self.__database.customers.update(customer_id, customer_data.model_dump(exclude_unset=True))
+                success = {"message": "Customer updated successfully"}
+                response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+                logger.info("Customer updated successfully")
+        except Exception as e:
+            logger.exception(f"Failed to update customer: {e}")
+        finally:
+            return response
+
+    def delete_customer(self, customer_id: str) -> Response:
+        error = {"error": "Failed to delete customer"}
+        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+        try:
+            error = {"error": "Customer not found"}
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+            existing_customer = self.__database.customers.get_by_id(customer_id)
+            if existing_customer:
+                self.__database.customers.delete(customer_id)
+                success = {"message": "Customer deleted successfully"}
+                response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+                logger.info("Customer deleted successfully")
+        except Exception as e:
+            logger.exception(f"Failed to delete customer: {e}")
+        finally:    
+            return response

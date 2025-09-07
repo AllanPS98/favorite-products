@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from src.routes.health_check import router as health_check_router
+from src.routes.v1 import v1
 from src.configurations import Configurations
 
 configurations = Configurations()
@@ -9,7 +10,8 @@ def create_app():
         title=configurations.APP_NAME,
         version=configurations.APP_VERSION,
     )
-    application.include_router(health_check_router, tags=["Health Check"])
+    application.include_router(health_check_router)
+    application.include_router(v1)
     return application
 
 app = create_app()

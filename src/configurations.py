@@ -12,4 +12,5 @@ class Configurations:
     DB_HOST = os.getenv('DB_HOST', 'host.docker.internal')
     DB_PORT = os.getenv('DB_PORT', '5432')
     DB_STRING_URI = f'postgresql+psycopg2://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    FAKE_STORE_URL = os.getenv('FAKE_STORE_URL', 'https://fakestoreapi.com')
     TIMEZONE = 'America/Sao_Paulo'
