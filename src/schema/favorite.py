@@ -26,3 +26,18 @@ class GetFavoriteParams(BaseModel):
 class DeleteFavoriteParams(BaseModel):
     customer_id: str
     product_id: str
+
+class SetFavoriteSuccessResponse(BaseModel):
+    message: str = "Favorite set successfully"
+
+class SetFavoriteErrorResponse(BaseModel):
+    error: str = "Failed to set favorite"
+
+class GetFavoriteErrorResponse(BaseModel):
+    error: str = "Failed to retrieve favorites"
+
+class RemoveFavoriteSuccessResponse(BaseModel):
+    message: str = "Favorite removed successfully"
+
+class RemoveFavoriteErrorResponse(BaseModel):
+    error: str = "Failed to remove favorite"

@@ -6,7 +6,7 @@ from http import HTTPStatus
 from src.common.functions import get_uuid, validate_email
 from src.database.database import Database
 from src.model.customer import Customer
-from src.schema.customer import PostCustomerPayload
+from src.schema.customer import CreateCustomerErrorResponse, CreateCustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
 from src.schema.exceptions import InvalidEmailError
@@ -36,16 +36,15 @@ class CustomerController:
                 email=normalized_email
             )
         self.__database.customers.insert(customer_model)
-        message = "Customer created successfully"
-        logger.info(message)
-        success = {"message": message, "customer_id": str(customer_model.customer_id)}
+        success = CreateCustomerSuccessResponse(customer_id=str(customer_model.customer_id))
+        logger.info(success.message)
         return success
     
     def create_customer(self, customer_data: PostCustomerPayload) -> Response:
-        error = {"error": "Failed to create customer"}
+        error = CreateCustomerErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
-            error = {"error": "Invalid email"}
+            error = CreateCustomerInvalidEmailResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
             normalized_email = self.__validate_email(customer_data)
             success = self.__insert_customer(customer_data, normalized_email)
@@ -58,10 +57,10 @@ class CustomerController:
             return response
 
     def get_customer(self, customer_id: str) -> Response:
-        error = {"error": "Failed to retrieve customer"}
+        error = GetCustomerErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
-            error = {"error": "Customer not found"}
+            error = GetCustomerNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
             customer = self.__database.customers.get_by_id(customer_id)
             if customer:
@@ -74,15 +73,15 @@ class CustomerController:
             return response
 
     def update_customer(self, customer_id: str, customer_data: PutCustomerPayload) -> Response:
-        error = {"error": "Failed to update customer"}
+        error = UpdateCustomerErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
-            error = {"error": "Customer not found"}
+            error = UpdateCustomerNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
             existing_customer = self.__database.customers.get_by_id(customer_id)
             if existing_customer:
                 self.__database.customers.update(customer_id, customer_data.model_dump(exclude_unset=True))
-                success = {"message": "Customer updated successfully"}
+                success = UpdateCustomerSuccessResponse().model_dump_json()
                 response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
                 logger.info("Customer updated successfully")
         except Exception as e:
@@ -91,15 +90,15 @@ class CustomerController:
             return response
 
     def delete_customer(self, customer_id: str) -> Response:
-        error = {"error": "Failed to delete customer"}
+        error = DeleteCustomerErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
-            error = {"error": "Customer not found"}
+            error = DeleteCustomerNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
             existing_customer = self.__database.customers.get_by_id(customer_id)
             if existing_customer:
                 self.__database.customers.delete(customer_id)
-                success = {"message": "Customer deleted successfully"}
+                success = DeleteCustomerSuccessResponse().model_dump_json()
                 response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
                 logger.info("Customer deleted successfully")
         except Exception as e:

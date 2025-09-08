@@ -4,7 +4,7 @@ from loguru import logger
 from http import HTTPStatus
 
 from src.database.database import Database
-from src.schema.favorite import ListFavoriteResponse, PostFavoritePayload 
+from src.schema.favorite import GetFavoriteErrorResponse, ListFavoriteResponse, PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse 
 from src.schema.favorite import GetFavoriteParams
 from src.schema.favorite import GetFavoriteResponse
 from src.schema.favorite import DeleteFavoriteParams
@@ -29,14 +29,13 @@ class FavoriteController:
                 results.append(result)
 
     def set_favorite(self, payload: PostFavoritePayload) -> Response:
-        error = {"error": "Failed to set favorite"}
+        error = SetFavoriteErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             self.__database.favorites.set_favorite(payload)
-            message = "Favorite set successfully"
-            success = {"message": message}
-            response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
-            logger.info(message)
+            success = SetFavoriteSuccessResponse()
+            response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
+            logger.info(success.message)
         except Exception as e:
             logger.exception(f"Failed to set favorite: {e}")
         finally:
@@ -46,7 +45,7 @@ class FavoriteController:
         customer_id = params.customer_id
         page = params.page
         size = params.size
-        error = {"error": "Failed to retrieve favorites"}
+        error = GetFavoriteErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             favorites, total = self.__database.favorites.get_favorites_by_customer(customer_id, page, size)
@@ -69,14 +68,13 @@ class FavoriteController:
     def remove_favorite(self, params: DeleteFavoriteParams) -> Response:
         customer_id = params.customer_id
         product_id = params.product_id
-        error = {"error": "Failed to remove favorite"}
+        error = RemoveFavoriteErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             self.__database.favorites.remove_favorite(customer_id, product_id)
-            message = "Favorite removed successfully"
-            success = {"message": message}
-            response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
-            logger.info(message)
+            success = RemoveFavoriteSuccessResponse()
+            response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+            logger.info(success.message)
         except Exception as e:
             logger.exception(f"Failed to remove favorite: {e}")
         finally:

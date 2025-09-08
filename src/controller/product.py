@@ -7,7 +7,7 @@ from src.common.functions import get_uuid
 from src.integration.fake_store import FakeStore
 from src.database.database import Database
 from src.model.product import Product
-from src.schema.product import GetAllProductsParams, GetProductByApiIdParams, GetProductResponse, ListProductResponse
+from src.schema.product import GetAllProductsErrorResponse, GetAllProductsParams, GetProductByApiIdErrorResponse, GetProductByApiIdNotFoundResponse, GetProductByApiIdParams, GetProductErrorResponse, GetProductNotFoundResponse, GetProductResponse, ListProductResponse
 from src.constants import APPLICATION_JSON
 
 
@@ -71,7 +71,7 @@ class ProductController:
         with_cache = params.with_cache
         page = params.page
         size = params.size
-        error = {"error": "Failed to retrieve products"}
+        error = GetAllProductsErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             self.__insert_all_products(with_cache)
@@ -91,10 +91,10 @@ class ProductController:
             return response          
 
     def get_product(self, product_id: str) -> Response:
-        error = {"error": "Failed to retrieve product"}
+        error = GetProductErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
-            error = {"error": "Product not found"}
+            error = GetProductNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
             product = self.__database.products.get_product(product_id)
             if product:
@@ -109,10 +109,10 @@ class ProductController:
     def get_product_by_api_id(self, params: GetProductByApiIdParams) -> Response:
         product_api_id = params.product_api_id
         with_cache = params.with_cache
-        error = {"error": "Failed to retrieve product"}
+        error = GetProductByApiIdErrorResponse().model_dump_json()
         response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
-            error = {"error": "Product not found"}
+            error = GetProductByApiIdNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
             self.__insert_product(product_api_id, with_cache)
             product = self.__database.products.get_product_by_api_id(product_api_id)

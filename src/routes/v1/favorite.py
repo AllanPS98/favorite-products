@@ -1,19 +1,28 @@
 from typing import List
 from fastapi import APIRouter
 from src.controller.favorite import FavoriteController
-from src.schema.favorite import PostFavoritePayload
+from src.schema.customer import GetCustomerErrorResponse
+from src.schema.favorite import PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse
 from src.schema.favorite import GetFavoriteParams
 from src.schema.favorite import ListFavoriteResponse
 from src.schema.favorite import DeleteFavoriteParams
 
 router = APIRouter(prefix="/favorites")
 
-#TODO: improve swagger documentation
 @router.post(
     "", 
     status_code=201, 
     summary="Set a product as favorite for a customer", 
-    responses={201: {"description": "Favorite set successfully"}}
+    responses={
+        201: {
+            "description": "Favorite set successfully",
+            "model": SetFavoriteSuccessResponse
+        },
+        500: {
+            "description": "Failed to set favorite",
+            "model": SetFavoriteErrorResponse
+        }
+    }
 )
 def set_favorite(payload: PostFavoritePayload):
     controller = FavoriteController()
@@ -24,7 +33,16 @@ def set_favorite(payload: PostFavoritePayload):
     "/customer", 
     status_code=200, 
     summary="Get all favorite products for a customer", 
-    responses={200: {"description": "List of favorite products", "model": ListFavoriteResponse}}
+    responses={
+        200: {
+            "description": "List of favorite products",
+            "model": ListFavoriteResponse
+        },
+        500: {
+            "description": "Failed to retrieve favorites",
+            "model": GetCustomerErrorResponse
+        }
+    }
 )
 def get_favorites_by_customer(params: GetFavoriteParams):
     controller = FavoriteController()
@@ -35,7 +53,16 @@ def get_favorites_by_customer(params: GetFavoriteParams):
     "", 
     status_code=200, 
     summary="Remove a product from customer's favorites", 
-    responses={200: {"description": "Favorite removed successfully"}}
+    responses={
+        200: {
+            "description": "Favorite removed successfully",
+            "model": RemoveFavoriteSuccessResponse
+        },
+        500: {
+            "description": "Failed to remove favorite",
+            "model": RemoveFavoriteErrorResponse
+        }
+    }
 )
 def remove_favorite(params: DeleteFavoriteParams):
     controller = FavoriteController()

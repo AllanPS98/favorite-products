@@ -27,4 +27,17 @@ class GetProductByApiIdParams(BaseModel):
     product_api_id: int
     with_cache: bool
     
+class GetProductByApiIdErrorResponse(BaseModel):
+    message: str = "Failed to retrieve product"
 
+class GetProductByApiIdNotFoundResponse(BaseModel):
+    message: str = "Product not found"
+
+class GetAllProductsErrorResponse(BaseModel):
+    message: str = "Failed to retrieve products"
+
+class GetProductErrorResponse(BaseModel):
+    message: str = "Failed to retrieve product"
+
+class GetProductNotFoundResponse(BaseModel):
+    message: str = "Product not found"
