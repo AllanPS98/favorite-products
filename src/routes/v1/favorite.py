@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter
 from src.controller.favorite import FavoriteController
 from src.schema.customer import GetCustomerErrorResponse
@@ -44,7 +43,12 @@ def set_favorite(payload: PostFavoritePayload):
         }
     }
 )
-def get_favorites_by_customer(params: GetFavoriteParams):
+def get_favorites_by_customer(with_cache: bool = True, page: int = 1, size: int = 10):
+    params = GetFavoriteParams(
+        with_cache=with_cache,
+        page=page,
+        size=size
+    )
     controller = FavoriteController()
     response_data = controller.get_favorites_by_customer(params)
     return response_data

@@ -13,15 +13,15 @@ class FavoriteDatabase:
         self.database_session = database_session
     
     def set_favorite(self, favorite_data):
-        with self.database_session.begin():
-            self.database_session.add(favorite_data)
-            self.database_session.commit()
+        with self.database_session as session:
+            session.add(favorite_data)
+            session.commit()
 
     def get_favorites_by_customer(self, customer_id: str, page: int, size: int) -> Tuple[List[Row[Tuple[UUID]]], int]:
         offset = (page - 1) * size
-        total = self.database_session.query(Favorite.product_id).filter(Favorite.customer_id == customer_id).count()
-        with self.database_session.begin():
-            favorites = self.database_session.query(
+        with self.database_session as session:
+            total = session.query(Favorite.product_id).filter(Favorite.customer_id == customer_id).count()
+            favorites = session.query(
                 Favorite.product_id
             ).filter(
                 Favorite.customer_id == customer_id
@@ -29,9 +29,9 @@ class FavoriteDatabase:
             return favorites, total
 
     def remove_favorite(self, customer_id: str, product_id: str):
-        with self.database_session.begin():
-            self.database_session.query(Favorite).filter(
+        with self.database_session as session:
+            session.query(Favorite).filter(
                 Favorite.customer_id == customer_id,
                 Favorite.product_id == product_id
             ).delete()
-            self.database_session.commit()
+            session.commit()

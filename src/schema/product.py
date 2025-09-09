@@ -3,14 +3,14 @@ from pydantic import BaseModel
 
 class GetProductResponse(BaseModel):
     product_id: str
-    product_api_id: str
+    product_api_id: int
     title: str
     price: float
     description: Optional[str]
     category: str
     image: str
     rating_rate: Optional[float]
-    rate_count: Optional[int]
+    rating_count: Optional[int]
 
 class ListProductResponse(BaseModel):
     page: int

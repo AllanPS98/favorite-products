@@ -15,15 +15,15 @@ def get_uuid() -> uuid.UUID:
     return uuid.uuid4()
 
 def mask_email(email: str) -> str:
-        split_email = str(email).split("@")
-        first_part = split_email[0]
-        domain_part = split_email[1]
-        masked_first_part = first_part[0] + ('*' * len(first_part[1:])) 
-        split_domain_part = domain_part.split(".")
-        masked_domain_part = ('*' * len(split_domain_part[0])) + "." + split_domain_part[1]
-        return masked_first_part + "@" + masked_domain_part
+    split_email = str(email).split("@")
+    first_part = split_email[0]
+    domain_part = split_email[1]
+    masked_first_part = first_part[0] + ('*' * len(first_part[1:])) 
+    split_domain_part = domain_part.split(".")
+    masked_domain_part = ('*' * len(split_domain_part[0])) + "." + split_domain_part[1]
+    return masked_first_part + "@" + masked_domain_part
 
-def validate_email(email: str) -> Optional[str]:
+def check_email(email: str) -> Optional[str]:
     email_normalized = None
     try:
         email_info = validate_email(email)

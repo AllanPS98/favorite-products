@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from src.configurations import Configurations
 from src.model.base import Base
+from src.model import __all__ as all_models
 
 configurations = Configurations()
 

@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter
 from src.schema.product import GetAllProductsErrorResponse, GetAllProductsParams, GetProductByApiIdErrorResponse, GetProductByApiIdNotFoundResponse, GetProductByApiIdParams, GetProductErrorResponse, GetProductNotFoundResponse, GetProductResponse, ListProductResponse
 from src.controller.product import ProductController
@@ -20,7 +19,12 @@ router = APIRouter(prefix="/products")
         }
     }
 )
-def get_products(params: GetAllProductsParams):
+def get_products(with_cache: bool = True, page: int = 1, size: int = 10):
+    params = GetAllProductsParams(
+        with_cache=with_cache,
+        page=page,
+        size=size
+    )
     controller = ProductController()
     response_data = controller.get_all_products(params)
     return response_data
@@ -44,7 +48,11 @@ def get_products(params: GetAllProductsParams):
         }
     }
 )
-def get_product_by_api_id(params: GetProductByApiIdParams):
+def get_product_by_api_id(product_api_id: int, with_cache: bool = True):
+    params = GetProductByApiIdParams(
+        product_api_id=product_api_id,
+        with_cache=with_cache
+    )
     controller = ProductController()
     response_data = controller.get_product_by_api_id(params)
     return response_data

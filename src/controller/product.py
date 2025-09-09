@@ -24,7 +24,7 @@ class ProductController:
     def __database(self) -> Database:
         return Database()
     
-    def __insert_product(self, product_api_id, with_cache):
+    def __insert_product(self, product_api_id: int, with_cache: bool):
         if not with_cache:
             product_response = self.__fake_store.get_product_by_api_id(product_api_id)
             if product_response:
@@ -42,8 +42,8 @@ class ProductController:
                 self.__database.products.insert(product_model)
     
     def __insert_all_products(self, with_cache: bool):
-        to_insert_results = List[Dict]()
-        to_update_results = List[Dict]()
+        to_insert_results = list[dict]()
+        to_update_results = list[dict]()
         if not with_cache:
             products_response = self.__fake_store.get_products()
             for product_data in products_response:
@@ -71,8 +71,6 @@ class ProductController:
         with_cache = params.with_cache
         page = params.page
         size = params.size
-        error = GetAllProductsErrorResponse().model_dump_json()
-        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             self.__insert_all_products(with_cache)
             products, total = self.__database.products.get_all_products(page, size)
@@ -86,13 +84,13 @@ class ProductController:
             response = Response(content=product_list.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
             logger.info("Products retrieved successfully")
         except Exception as e:
+            error = GetAllProductsErrorResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
             logger.exception(f"Failed to retrieve products: {e}")
         finally:
             return response          
 
     def get_product(self, product_id: str) -> Response:
-        error = GetProductErrorResponse().model_dump_json()
-        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             error = GetProductNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
@@ -102,6 +100,8 @@ class ProductController:
                 response = Response(content=result.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
                 logger.info("Product retrieved successfully")
         except Exception as e:
+            error = GetProductErrorResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
             logger.exception(f"Failed to retrieve product: {e}")
         finally:
             return response
@@ -109,8 +109,6 @@ class ProductController:
     def get_product_by_api_id(self, params: GetProductByApiIdParams) -> Response:
         product_api_id = params.product_api_id
         with_cache = params.with_cache
-        error = GetProductByApiIdErrorResponse().model_dump_json()
-        response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
         try:
             error = GetProductByApiIdNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
@@ -121,6 +119,8 @@ class ProductController:
                 response = Response(content=result.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
                 logger.info("Product retrieved successfully")
         except Exception as e:
+            error = GetProductByApiIdErrorResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
             logger.exception(f"Failed to retrieve product: {e}")
         finally:
             return response
