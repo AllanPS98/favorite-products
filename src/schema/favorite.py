@@ -43,3 +43,6 @@ class RemoveFavoriteSuccessResponse(BaseModel):
 
 class RemoveFavoriteErrorResponse(BaseModel):
     error: str = "Failed to remove favorite"
+
+class RemoveFavoriteNotFoundResponse(BaseModel):
+    error: str = "Favorite not found"

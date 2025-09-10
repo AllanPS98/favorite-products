@@ -9,7 +9,7 @@ from src.model.customer import Customer
 from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
-from src.schema.exceptions import InvalidEmailError
+from src.schema.exceptions import DuplicateEmailError, InvalidEmailError
 from src.constants import APPLICATION_JSON
 
 
@@ -42,9 +42,16 @@ class CustomerController:
     
     def create_customer(self, customer_data: PostCustomerPayload) -> Response:
         try:
+            duplicated_email = self.__database.customers.get_by_email(customer_data.email)
+            if duplicated_email:
+                raise DuplicateEmailError("Email already in use")
             normalized_email = self.__validate_email(customer_data.email)
             success = self.__insert_customer(customer_data, normalized_email)
             response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
+        except DuplicateEmailError as duplicate_email_error:
+            error = CustomerInvalidEmailResponse(error="This email is already registered").model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
+            logger.exception(f"Duplicate email error: {duplicate_email_error}")
         except InvalidEmailError as invalid_email_error:
             error = CustomerInvalidEmailResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
@@ -95,6 +102,9 @@ class CustomerController:
 
     def update_customer(self, customer_id: str, customer_data: PutCustomerPayload) -> Response:
         try:
+            if customer_data.email is not None:
+                normalized_email = self.__validate_email(customer_data.email)
+                customer_data.email = normalized_email
             error = UpdateCustomerNotFoundResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
             existing_customer = self.__database.customers.get_by_id(customer_id)
@@ -103,6 +113,10 @@ class CustomerController:
                 success = UpdateCustomerSuccessResponse().model_dump_json()
                 response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
                 logger.info("Customer updated successfully")
+        except InvalidEmailError as invalid_email_error:
+            error = CustomerInvalidEmailResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
+            logger.exception(f"Email validation failed: {invalid_email_error}")
         except Exception as e:
             error = UpdateCustomerErrorResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

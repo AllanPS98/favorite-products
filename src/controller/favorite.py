@@ -5,8 +5,8 @@ from http import HTTPStatus
 
 from src.database.database import Database
 from src.model.favorite import Favorite
-from src.schema.exceptions import SetFavoriteCustomerNotFoundError, SetFavoriteProductNotFoundError
-from src.schema.favorite import GetFavoriteErrorResponse, ListFavoriteResponse, PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorCustomerNotFoundResponse, SetFavoriteErrorProductNotFoundResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse 
+from src.schema.exceptions import DuplicateFavoriteProductError, RemoveFavoriteNotFoundError, SetFavoriteCustomerNotFoundError, SetFavoriteProductNotFoundError
+from src.schema.favorite import GetFavoriteErrorResponse, ListFavoriteResponse, PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteNotFoundResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorCustomerNotFoundResponse, SetFavoriteErrorProductNotFoundResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse 
 from src.schema.favorite import GetFavoriteParams
 from src.schema.favorite import DeleteFavoriteParams
 from src.constants import APPLICATION_JSON
@@ -40,6 +40,11 @@ class FavoriteController:
                 error = SetFavoriteErrorProductNotFoundResponse()
                 response = Response(content=error.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
                 raise SetFavoriteProductNotFoundError(error.error)
+            _, total = self.__database.favorites.get_favorites_by_customer(str(customer.customer_id), 1, 1)
+            favorites, _ = self.__database.favorites.get_favorites_by_customer(str(customer.customer_id), 1, total)
+            for favorite in favorites:
+                if str(favorite[0]) == str(product.product_id):
+                    raise DuplicateFavoriteProductError("This favorite product is already exists for this customer")
             customer_id = customer.get()["customer_id"]
             product_id = product.get()["product_id"]
             favorite_object = Favorite(customer_id=customer_id, product_id=product_id)
@@ -47,6 +52,11 @@ class FavoriteController:
             success = SetFavoriteSuccessResponse()
             response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
             logger.info(success.message)
+        except DuplicateFavoriteProductError as duplicate_exception:
+            message = "This favorite product is already exists for this customer"
+            error = SetFavoriteErrorResponse(error=message).model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
+            logger.exception(f"{duplicate_exception}")
         except SetFavoriteCustomerNotFoundError | SetFavoriteProductNotFoundError as not_found_exception:
             logger.exception(f"Failed to set favorite: {not_found_exception}")
         except Exception as e:
@@ -84,10 +94,18 @@ class FavoriteController:
         customer_id = params.customer_id
         product_id = params.product_id
         try:
+            
+            _, total = self.__database.favorites.get_favorites_by_customer(customer_id, 1, 1)
+            if total == 0:
+                error = RemoveFavoriteNotFoundResponse().model_dump_json()
+                response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+                raise RemoveFavoriteNotFoundError("Favorite not found")
             self.__database.favorites.remove_favorite(customer_id, product_id)
             success = RemoveFavoriteSuccessResponse()
             response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
             logger.info(success.message)
+        except RemoveFavoriteNotFoundError as not_found_exception:
+            logger.exception(f"Not found favorite: {not_found_exception}")
         except Exception as e:
             error = RemoveFavoriteErrorResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

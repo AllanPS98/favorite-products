@@ -28,16 +28,16 @@ class GetProductByApiIdParams(BaseModel):
     with_cache: bool
     
 class GetProductByApiIdErrorResponse(BaseModel):
-    message: str = "Failed to retrieve product"
+    error: str = "Failed to retrieve product"
 
 class GetProductByApiIdNotFoundResponse(BaseModel):
-    message: str = "Product not found"
+    error: str = "Product not found"
 
 class GetAllProductsErrorResponse(BaseModel):
-    message: str = "Failed to retrieve products"
+    error: str = "Failed to retrieve products"
 
 class GetProductErrorResponse(BaseModel):
-    message: str = "Failed to retrieve product"
+    error: str = "Failed to retrieve product"
 
 class GetProductNotFoundResponse(BaseModel):
-    message: str = "Product not found"
+    error: str = "Product not found"
