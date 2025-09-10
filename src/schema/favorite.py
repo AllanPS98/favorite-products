@@ -4,8 +4,8 @@ from src.schema.product import GetProductResponse
 
 
 class PostFavoritePayload(BaseModel):
-    customer_id: str
-    product_id: str
+    customer_email: str
+    product_api_id: int
 
 class ListFavoriteResponse(BaseModel):
     page: int
@@ -29,6 +29,12 @@ class DeleteFavoriteParams(BaseModel):
 
 class SetFavoriteSuccessResponse(BaseModel):
     message: str = "Favorite set successfully"
+
+class SetFavoriteErrorCustomerNotFoundResponse(BaseModel):
+    error: str = "Customer not found"
+
+class SetFavoriteErrorProductNotFoundResponse(BaseModel):
+    error: str = "Product not found"
 
 class SetFavoriteErrorResponse(BaseModel):
     error: str = "Failed to set favorite"

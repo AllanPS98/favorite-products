@@ -6,10 +6,10 @@ from email_validator import validate_email, EmailNotValidError
 
 from src.configurations import Configurations
 
-config_app = Configurations()
+configurations = Configurations()
 
 def timezone_br() -> pytz.timezone:
-    return pytz.timezone(config_app.TIMEZONE)
+    return pytz.timezone(configurations.TIMEZONE)
 
 def get_uuid() -> uuid.UUID:
     return uuid.uuid4()

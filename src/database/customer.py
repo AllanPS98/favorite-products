@@ -18,6 +18,11 @@ class CustomerDatabase:
             customer = session.query(Customer).filter(Customer.customer_id == customer_id).first()
             return customer
     
+    def get_customer_by_email(self, email: str) -> Optional[Customer]:
+        with self.database_session as session:
+            customer = session.query(Customer).filter(Customer.email == email).first()
+            return customer
+    
     def update(self, customer_id: str, customer_data: Dict):
         with self.database_session as session:
             session.query(Customer).filter(Customer.customer_id == customer_id).update(customer_data)

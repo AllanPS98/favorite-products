@@ -1,8 +1,8 @@
 """insert_base_tables
 
-Revision ID: 2e23612d9ed3
+Revision ID: 56e61eb940b8
 Revises: 
-Create Date: 2025-09-08 21:43:21.035782
+Create Date: 2025-09-10 09:05:56.516469
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2e23612d9ed3'
+revision: str = '56e61eb940b8'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,8 @@ def upgrade() -> None:
     sa.Column('customer_id', sa.UUID(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.PrimaryKeyConstraint('customer_id'),
     sa.UniqueConstraint('customer_id')
     )
@@ -41,8 +41,8 @@ def upgrade() -> None:
     sa.Column('image', sa.String(), nullable=False),
     sa.Column('rating_rate', sa.Float(), nullable=True),
     sa.Column('rating_count', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.PrimaryKeyConstraint('product_id'),
     sa.UniqueConstraint('product_id')
     )
@@ -50,10 +50,10 @@ def upgrade() -> None:
     op.create_table('favorites',
     sa.Column('customer_id', sa.UUID(), nullable=False),
     sa.Column('product_id', sa.UUID(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['customer_id'], ['customers.customer_id'], ),
-    sa.ForeignKeyConstraint(['product_id'], ['products.product_id'], ),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.ForeignKeyConstraint(['customer_id'], ['customers.customer_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['product_id'], ['products.product_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('customer_id', 'product_id')
     )
     # ### end Alembic commands ###

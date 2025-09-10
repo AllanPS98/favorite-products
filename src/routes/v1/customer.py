@@ -30,6 +30,7 @@ def create_customer(payload: PostCustomerPayload):
     response_data = controller.create_customer(payload)
     return response_data
 
+#TODO: ADICIONAR ENDPOINT PARA BUSCAR CLIENTE POR EMAIL
 @router.get(
     "/{customer_id}",
     status_code=200,

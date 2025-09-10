@@ -68,7 +68,11 @@ def get_favorites_by_customer(with_cache: bool = True, page: int = 1, size: int 
         }
     }
 )
-def remove_favorite(params: DeleteFavoriteParams):
+def remove_favorite(customer_id: str, product_id: str):
+    params = DeleteFavoriteParams(
+        customer_id=customer_id,
+        product_id=product_id
+    )
     controller = FavoriteController()
     response_data = controller.remove_favorite(params)
     return response_data

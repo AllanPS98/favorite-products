@@ -12,9 +12,9 @@ class FavoriteDatabase:
     def __init__(self, database_session: Session):
         self.database_session = database_session
     
-    def set_favorite(self, favorite_data):
+    def set_favorite(self, favorite_object: Favorite):
         with self.database_session as session:
-            session.add(favorite_data)
+            session.add(favorite_object)
             session.commit()
 
     def get_favorites_by_customer(self, customer_id: str, page: int, size: int) -> Tuple[List[Row[Tuple[UUID]]], int]:

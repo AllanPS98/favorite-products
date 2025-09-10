@@ -18,7 +18,7 @@ class Product(BaseModel):
     rating_rate = Column(Float)
     rating_count = Column(Integer)
 
-    favorites = relationship("Favorite", back_populates="product")
+    favorites = relationship("Favorite", back_populates="product", cascade="all, delete-orphan")
 
     def get(self) -> dict:
         return {

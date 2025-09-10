@@ -4,7 +4,9 @@ from loguru import logger
 from http import HTTPStatus
 
 from src.database.database import Database
-from src.schema.favorite import GetFavoriteErrorResponse, ListFavoriteResponse, PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse 
+from src.model.favorite import Favorite
+from src.schema.exceptions import SetFavoriteCustomerNotFoundError, SetFavoriteProductNotFoundError
+from src.schema.favorite import GetFavoriteErrorResponse, ListFavoriteResponse, PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorCustomerNotFoundResponse, SetFavoriteErrorProductNotFoundResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse 
 from src.schema.favorite import GetFavoriteParams
 from src.schema.favorite import GetFavoriteResponse
 from src.schema.favorite import DeleteFavoriteParams
@@ -30,10 +32,25 @@ class FavoriteController:
 
     def set_favorite(self, payload: PostFavoritePayload) -> Response:
         try:
-            self.__database.favorites.set_favorite(payload)
+            customer = self.__database.customers.get_customer_by_email(payload.customer_email)
+            if not customer:
+                error = SetFavoriteErrorCustomerNotFoundResponse()
+                response = Response(content=error.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+                raise SetFavoriteCustomerNotFoundError(error.error)
+            product = self.__database.products.get_product_by_api_id(payload.product_api_id)
+            if not product:
+                error = SetFavoriteErrorProductNotFoundResponse()
+                response = Response(content=error.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+                raise SetFavoriteProductNotFoundError(error.error)
+            customer_id = customer.get()["customer_id"]
+            product_id = product.get()["product_id"]
+            favorite_object = Favorite(customer_id=customer_id, product_id=product_id)
+            self.__database.favorites.set_favorite(favorite_object)
             success = SetFavoriteSuccessResponse()
             response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
             logger.info(success.message)
+        except SetFavoriteCustomerNotFoundError | SetFavoriteProductNotFoundError as not_found_exception:
+            logger.exception(f"Failed to set favorite: {not_found_exception}")
         except Exception as e:
             error = SetFavoriteErrorResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

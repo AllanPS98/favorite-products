@@ -12,7 +12,7 @@ class Customer(BaseModel):
     email = Column(String, unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
 
-    favorites = relationship("Favorite", back_populates="customer")
+    favorites = relationship("Favorite", back_populates="customer", cascade="all, delete-orphan")
     
     def get(self):
         masked_email = mask_email(self.email)
