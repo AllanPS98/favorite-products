@@ -6,7 +6,7 @@ from http import HTTPStatus
 from src.common.functions import get_uuid, check_email
 from src.database.database import Database
 from src.model.customer import Customer
-from src.schema.customer import CreateCustomerErrorResponse, CreateCustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
+from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
 from src.schema.exceptions import InvalidEmailError
@@ -46,7 +46,7 @@ class CustomerController:
             success = self.__insert_customer(customer_data, normalized_email)
             response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.CREATED)
         except InvalidEmailError as invalid_email_error:
-            error = CreateCustomerInvalidEmailResponse().model_dump_json()
+            error = CustomerInvalidEmailResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
             logger.exception(f"Email validation failed: {invalid_email_error}")
         except Exception as e:
@@ -65,6 +65,27 @@ class CustomerController:
                 result = GetCustomerResponse(**customer.get())
                 response = Response(content=result.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
                 logger.info("Customer retrieved successfully")
+        except Exception as e:
+            error = GetCustomerErrorResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+            logger.exception(f"Failed to retrieve customer: {e}")
+        finally:
+            return response
+    
+    def get_customer_by_email(self, email: str) -> Response:
+        try:
+            error = GetCustomerNotFoundResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+            normalized_email = self.__validate_email(email)
+            customer = self.__database.customers.get_by_email(normalized_email)
+            if customer:
+                result = GetCustomerResponse(**customer.get())
+                response = Response(content=result.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+                logger.info("Customer retrieved successfully")
+        except InvalidEmailError as invalid_email_error:
+            error = CustomerInvalidEmailResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
+            logger.exception(f"Email validation failed: {invalid_email_error}")
         except Exception as e:
             error = GetCustomerErrorResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

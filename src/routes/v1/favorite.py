@@ -43,9 +43,9 @@ def set_favorite(payload: PostFavoritePayload):
         }
     }
 )
-def get_favorites_by_customer(with_cache: bool = True, page: int = 1, size: int = 10):
+def get_favorites_by_customer(customer_id: str, page: int = 1, size: int = 10):
     params = GetFavoriteParams(
-        with_cache=with_cache,
+        customer_id=customer_id,
         page=page,
         size=size
     )

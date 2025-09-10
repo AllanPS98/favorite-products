@@ -1,7 +1,35 @@
-from . import client, headers
+import pytest
+from loguru import logger
 
+from src.model.product import Product
+
+from . import client, headers
+from src.database.database import Database
+
+@pytest.fixture(autouse=True)
+def setup_and_teardown():
+    logger.info("Inserting initial customer for tests...")
+    database = Database()
+    product = Product(
+        product_api_id=-1,
+        title="Initial Test",
+        description="Initial Description",
+        price=10.0,
+        image="http://example.com/image.jpg",
+        category = "electronics",
+        rating_rate = 3.5,
+        rating_count = 10
+
+    )
+    database.products.insert(product)
+    
+    yield
+    logger.info("Cleaning customer table after test...")
+    database = Database()
+    database.products.delete_all_products()
+
+#TODO: TESTAR CASOS DE ERRO
 def test_get_all_products_with_cache():
-    #TODO: INSERIR ANTES DE BUSCAR E REMOVER DEPOIS DE BUSCAR (USAR UM PRODUTO MOCKADO DE TESTE)
     params = {
         "with_cache": True,
         "page": 1,
@@ -15,10 +43,9 @@ def test_get_all_products_with_cache():
         response_data = response.json()
 
     assert response.status_code == 200
-    assert len(response_data["products"]) == 10
+    assert len(response_data["products"]) == 1
 
 def test_get_all_products_without_cache():
-    # TODO: INSERIR ANTES DE BUSCAR E REMOVER DEPOIS DE BUSCAR (USAR UM PRODUTO MOCKADO DE TESTE)
     params = {
         "with_cache": False,
         "page": 1,
@@ -33,9 +60,9 @@ def test_get_all_products_without_cache():
         assert len(response_data["products"]) == 10
 
 def test_get_product_by_api_id_with_cache():
-    # TODO: INSERIR ANTES DE BUSCAR E REMOVER DEPOIS DE BUSCAR (USAR UM PRODUTO MOCKADO DE TESTE)
+    
     params = {
-        "product_api_id": 1,
+        "product_api_id": -1,
         "with_cache": True,
     }
 
@@ -44,10 +71,10 @@ def test_get_product_by_api_id_with_cache():
         response_data = response.json()
 
         assert response.status_code == 200
-        assert response_data["product_api_id"] == 1
+        assert response_data["product_api_id"] == -1
 
 def test_get_product_by_api_id_without_cache():
-    # TODO: INSERIR ANTES DE BUSCAR E REMOVER DEPOIS DE BUSCAR (USAR UM PRODUTO MOCKADO DE TESTE)
+    
     params = {
         "product_api_id": 1,
         "with_cache": False,
@@ -61,20 +88,24 @@ def test_get_product_by_api_id_without_cache():
         assert response_data["product_api_id"] == 1
 
 def test_get_product():
-    # TODO: INSERIR ANTES DE BUSCAR E REMOVER DEPOIS DE BUSCAR (USAR UM PRODUTO MOCKADO DE TESTE)
-    params = {
-        "with_cache": False,
-        "page": 1,
-        "size": 10
-    }
-    
+    database = Database()
+    product = Product(
+        product_api_id=-2,
+        title="Initial Test",
+        description="Initial Description",
+        price=10.0,
+        image="http://example.com/image.jpg",
+        category = "electronics",
+        rating_rate = 3.5,
+        rating_count = 10
+
+    )
+    database.products.insert(product)
+    product_id = product.product_id
     with client:
-        response_all = client.get("/v1/products/all", headers=headers, params=params)    
-        response_all_data = response_all.json()
-        product_id = response_all_data["products"][0]["product_id"]
 
         response = client.get(f"/v1/products/id/{product_id}", headers=headers)
         response_data = response.json()
 
         assert response.status_code == 200
-        assert response_data["product_api_id"] == 1
+        assert response_data["product_api_id"] == -2

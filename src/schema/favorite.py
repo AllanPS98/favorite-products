@@ -14,10 +14,6 @@ class ListFavoriteResponse(BaseModel):
     customer_id: str
     products: List[GetProductResponse]
 
-class GetFavoriteResponse(BaseModel):
-    customer_id: str
-    product: GetProductResponse
-
 class GetFavoriteParams(BaseModel):
     page: int
     size: int

@@ -1,15 +1,17 @@
 from typing import Dict, List, Tuple
 from sqlalchemy.orm import Session
 
+from src.configurations import Configurations
 from src.model.favorite import Favorite
 from src.model.product import Product
 
+configurations = Configurations()
 
 class ProductDatabase:
     def __init__(self, database_session: Session):
         self.database_session = database_session
     
-    def insert(self, product_data):
+    def insert(self, product_data: Product):
         with self.database_session as session:
             self.database_session.add(product_data)
             self.database_session.commit()
@@ -55,3 +57,9 @@ class ProductDatabase:
         with self.database_session as session:
             session.bulk_update_mappings(Product, products_data)
             session.commit()
+    
+    def delete_all_products(self):
+        if configurations.TEST_MODE:
+            with self.database_session as session:
+                session.query(Product).delete()
+                session.commit()

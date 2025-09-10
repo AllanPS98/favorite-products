@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from src.controller.customer import CustomerController
-from src.schema.customer import CreateCustomerErrorResponse, CreateCustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
+from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/customers")
         },
         400: {
             "description": "Invalid email",
-            "model": CreateCustomerInvalidEmailResponse
+            "model": CustomerInvalidEmailResponse
         },
         500: {
             "description": "Failed to create customer",
@@ -30,9 +30,8 @@ def create_customer(payload: PostCustomerPayload):
     response_data = controller.create_customer(payload)
     return response_data
 
-#TODO: ADICIONAR ENDPOINT PARA BUSCAR CLIENTE POR EMAIL
 @router.get(
-    "/{customer_id}",
+    "/id/{customer_id}",
     status_code=200,
     summary="Get customer by ID",
     responses={
@@ -53,6 +52,30 @@ def create_customer(payload: PostCustomerPayload):
 def get_customer(customer_id: str):
     controller = CustomerController()
     response_data = controller.get_customer(customer_id)
+    return response_data
+
+@router.get(
+    "/by-email",
+    status_code=200,
+    summary="Get customer by ID",
+    responses={
+        200: {
+            "description": "Customer details",
+            "model": GetCustomerResponse
+        },
+        404: {
+            "description": "Customer not found",
+            "model": GetCustomerNotFoundResponse
+        },
+        500: {
+            "description": "Failed to retrieve customer",
+            "model": GetCustomerErrorResponse
+        }
+    }
+)
+def get_customer_by_email(customer_email: str):
+    controller = CustomerController()
+    response_data = controller.get_customer_by_email(customer_email)
     return response_data
 
 @router.put(

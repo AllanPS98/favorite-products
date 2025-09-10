@@ -8,9 +8,9 @@ from src.model.favorite import Favorite
 from src.schema.exceptions import SetFavoriteCustomerNotFoundError, SetFavoriteProductNotFoundError
 from src.schema.favorite import GetFavoriteErrorResponse, ListFavoriteResponse, PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorCustomerNotFoundResponse, SetFavoriteErrorProductNotFoundResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse 
 from src.schema.favorite import GetFavoriteParams
-from src.schema.favorite import GetFavoriteResponse
 from src.schema.favorite import DeleteFavoriteParams
 from src.constants import APPLICATION_JSON
+from src.schema.product import GetProductResponse
 
 class FavoriteController:
     
@@ -21,18 +21,16 @@ class FavoriteController:
     def __database(self) -> Database:
         return Database()
     
-    def __append_resuts(self, customer_id: str, favorites: List, results: List[GetFavoriteResponse]):
+    def __append_resuts(self, customer_id: str, favorites: List, results: List[GetProductResponse]):
         for product_id in favorites:
-            product = self.__database.products.get_product(product_id)
+            product = self.__database.products.get_product(str(product_id[0]))
             if product:
-                result = GetFavoriteResponse()
-                result.customer_id = customer_id
-                result.product = product.get()
+                result = GetProductResponse(**product.get())
                 results.append(result)
 
     def set_favorite(self, payload: PostFavoritePayload) -> Response:
         try:
-            customer = self.__database.customers.get_customer_by_email(payload.customer_email)
+            customer = self.__database.customers.get_by_email(payload.customer_email)
             if not customer:
                 error = SetFavoriteErrorCustomerNotFoundResponse()
                 response = Response(content=error.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
@@ -64,7 +62,7 @@ class FavoriteController:
         size = params.size
         try:
             favorites, total = self.__database.favorites.get_favorites_by_customer(customer_id, page, size)
-            results = List[GetFavoriteResponse]()
+            results = list[GetProductResponse]()
             self.__append_resuts(customer_id, favorites, results)
             favorite_list = ListFavoriteResponse(
                 page=page,

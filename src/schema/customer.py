@@ -11,8 +11,8 @@ class GetCustomerResponse(BaseModel):
     email: str
 
 class PutCustomerPayload(BaseModel):
-    name: str
-    email: str
+    name: str = None
+    email: str = None
 
 class CreateCustomerSuccessResponse(BaseModel):
     message: str = "Customer created successfully"
@@ -21,7 +21,7 @@ class CreateCustomerSuccessResponse(BaseModel):
 class CreateCustomerErrorResponse(BaseModel):
     error: str = "Failed to create customer"
 
-class CreateCustomerInvalidEmailResponse(BaseModel):
+class CustomerInvalidEmailResponse(BaseModel):
     error: str = "Invalid email"
 
 class GetCustomerNotFoundResponse(BaseModel):

@@ -1,7 +1,9 @@
 from typing import Dict, Optional
 from sqlalchemy.orm import Session
 from src.model.customer import Customer
+from src.configurations import Configurations
 
+configurations = Configurations()
 
 class CustomerDatabase:
 
@@ -18,7 +20,7 @@ class CustomerDatabase:
             customer = session.query(Customer).filter(Customer.customer_id == customer_id).first()
             return customer
     
-    def get_customer_by_email(self, email: str) -> Optional[Customer]:
+    def get_by_email(self, email: str) -> Optional[Customer]:
         with self.database_session as session:
             customer = session.query(Customer).filter(Customer.email == email).first()
             return customer
@@ -32,3 +34,9 @@ class CustomerDatabase:
         with self.database_session as session:
             session.query(Customer).filter(Customer.customer_id == customer_id).delete()
             session.commit()
+    
+    def delete_all_customers(self):
+        if configurations.TEST_MODE:
+            with self.database_session as session:
+                session.query(Customer).delete()
+                session.commit()
