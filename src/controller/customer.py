@@ -1,16 +1,21 @@
+from datetime import timedelta
 from typing import Dict
 from fastapi import Response
 from loguru import logger
 from http import HTTPStatus
 
 from src.common.functions import get_uuid, check_email
+from src.common.auth import hash_password, verify_password, create_access_token
 from src.database.database import Database
 from src.model.customer import Customer
-from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
+from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, PostLoginResponse, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
-from src.schema.exceptions import DuplicateEmailError, InvalidEmailError
+from src.schema.exceptions import DuplicateEmailError, InvalidCredentialsError, InvalidEmailError
 from src.constants import APPLICATION_JSON
+from src.configurations import Configurations
+
+configurations = Configurations()
 
 
 class CustomerController:
@@ -30,10 +35,12 @@ class CustomerController:
         return normalized_email
     
     def __insert_customer(self, customer_data: PostCustomerPayload, normalized_email: str) -> CreateCustomerSuccessResponse:
+        encrypted_password = hash_password(customer_data.password)
         customer_model = Customer(
             customer_id= get_uuid(),
             name=customer_data.name,
-            email=normalized_email
+            email=normalized_email,
+            encrypted_password=encrypted_password,
         )
         self.__database.customers.insert(customer_model)
         success = CreateCustomerSuccessResponse(customer_id=str(customer_model.customer_id))
@@ -60,6 +67,44 @@ class CustomerController:
             error = CreateCustomerErrorResponse().model_dump_json()
             response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
             logger.exception(f"Failed to create customer: {e}")
+        finally:
+            return response
+    
+    def authenticate_customer(self, email: str, password: str) -> Dict[str, str]:
+        customer = self.__database.customers.get_by_email(email)
+        if not customer or not verify_password(password, customer.encrypted_password):
+            raise InvalidCredentialsError("Invalid credentials")
+        
+        access_token = create_access_token(
+            data={"sub": str(customer.customer_id), "role": customer.role},
+            expires_delta=timedelta(minutes=configurations.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+        success = PostLoginResponse(
+            access_token=access_token,
+            token_type="bearer"
+        )
+        response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+        return response
+    
+    def update_to_admin(self, email: str) -> Response:
+        try:
+            error = UpdateCustomerNotFoundResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.NOT_FOUND)
+            normalized_email = self.__validate_email(email)
+            customer = self.__database.customers.get_by_email(normalized_email)
+            if customer:
+                self.__database.customers.update(customer.customer_id, {"role": "admin"})
+                success = UpdateCustomerSuccessResponse().model_dump_json()
+                response = Response(content=success, media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+                logger.info("Customer updated to admin successfully")
+        except InvalidEmailError as invalid_email_error:
+            error = CustomerInvalidEmailResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.BAD_REQUEST)
+            logger.exception(f"Email validation failed: {invalid_email_error}")
+        except Exception as e:
+            error = UpdateCustomerErrorResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+            logger.exception(f"Failed to update customer to admin: {e}")
         finally:
             return response
 

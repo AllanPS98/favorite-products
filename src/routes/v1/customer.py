@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
+from src.common.auth import admin_required, normal_user_required
 from src.controller.customer import CustomerController
 from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
@@ -30,6 +32,45 @@ def create_customer(payload: PostCustomerPayload):
     response_data = controller.create_customer(payload)
     return response_data
 
+@router.post(
+    "/login",
+    status_code=200,
+    summary="Authenticate a customer",
+    responses={
+        200: {
+            "description": "Customer authenticated successfully"
+        }
+    }
+)
+def login(form: OAuth2PasswordRequestForm = Depends()):
+    controller = CustomerController()
+    response_data = controller.authenticate_customer(form.username, form.password)
+    return response_data
+
+@router.put(
+    "/to-admin",
+    status_code=200,
+    summary="Update customer to admin",
+    responses={
+        200: {
+            "description": "Customer updated to admin successfully", 
+            "model": UpdateCustomerSuccessResponse
+        },
+        404: {
+            "description": "Customer not found",
+            "model": UpdateCustomerNotFoundResponse
+        },
+        500: {
+            "description": "Failed to update customer",
+            "model": UpdateCustomerErrorResponse
+        }
+    }
+)
+def update_to_admin(customer_email: str, user = Depends(admin_required)):
+    controller = CustomerController()
+    response_data = controller.update_to_admin(customer_email)
+    return response_data
+
 @router.get(
     "/id/{customer_id}",
     status_code=200,
@@ -49,7 +90,7 @@ def create_customer(payload: PostCustomerPayload):
         }
     }
 )
-def get_customer(customer_id: str):
+def get_customer(customer_id: str, user = Depends(admin_required)):
     controller = CustomerController()
     response_data = controller.get_customer(customer_id)
     return response_data
@@ -73,7 +114,7 @@ def get_customer(customer_id: str):
         }
     }
 )
-def get_customer_by_email(customer_email: str):
+def get_customer_by_email(customer_email: str, user = Depends(normal_user_required)):
     controller = CustomerController()
     response_data = controller.get_customer_by_email(customer_email)
     return response_data
@@ -97,7 +138,7 @@ def get_customer_by_email(customer_email: str):
         }
     }
 )
-def update_customer(customer_id: str, customer_data: PutCustomerPayload):
+def update_customer(customer_id: str, customer_data: PutCustomerPayload, user = Depends(normal_user_required)):
     controller = CustomerController()
     response_data = controller.update_customer(customer_id, customer_data)
     return response_data
@@ -121,7 +162,7 @@ def update_customer(customer_id: str, customer_data: PutCustomerPayload):
         }
     }
 )
-def delete_customer(customer_id: str):
+def delete_customer(customer_id: str, user = Depends(admin_required)):
     controller = CustomerController()
     response_data = controller.delete_customer(customer_id)
     return response_data

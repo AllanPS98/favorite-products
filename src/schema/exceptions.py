@@ -21,3 +21,7 @@ class RemoveFavoriteNotFoundError(Exception):
 class DuplicateFavoriteProductError(Exception):
     """Exception raised when trying to add a duplicate favorite product for a customer."""
     pass
+
+class InvalidCredentialsError(Exception):
+    """Exception raised for invalid authentication credentials."""
+    pass

@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from src.common.auth import normal_user_required
 from src.controller.favorite import FavoriteController
 from src.schema.customer import GetCustomerErrorResponse
 from src.schema.favorite import PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/favorites")
         }
     }
 )
-def set_favorite(payload: PostFavoritePayload):
+def set_favorite(payload: PostFavoritePayload, user = Depends(normal_user_required)):
     controller = FavoriteController()
     response_data = controller.set_favorite(payload)
     return response_data
@@ -43,7 +44,7 @@ def set_favorite(payload: PostFavoritePayload):
         }
     }
 )
-def get_favorites_by_customer(customer_id: str, page: int = 1, size: int = 10):
+def get_favorites_by_customer(customer_id: str, page: int = 1, size: int = 10, user = Depends(normal_user_required)):
     params = GetFavoriteParams(
         customer_id=customer_id,
         page=page,
@@ -68,7 +69,7 @@ def get_favorites_by_customer(customer_id: str, page: int = 1, size: int = 10):
         }
     }
 )
-def remove_favorite(customer_id: str, product_id: str):
+def remove_favorite(customer_id: str, product_id: str, user = Depends(normal_user_required)):
     params = DeleteFavoriteParams(
         customer_id=customer_id,
         product_id=product_id

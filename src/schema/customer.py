@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class PostCustomerPayload(BaseModel):
     name: str
     email: str
+    password: str
 
 class GetCustomerResponse(BaseModel):
     customer_id: str
@@ -13,6 +14,10 @@ class GetCustomerResponse(BaseModel):
 class PutCustomerPayload(BaseModel):
     name: str = None
     email: str = None
+
+class PostLoginResponse(BaseModel):
+    access_token: str
+    token_type: str
 
 class CreateCustomerSuccessResponse(BaseModel):
     message: str = "Customer created successfully"

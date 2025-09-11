@@ -2,6 +2,7 @@ from typing import Optional
 import uuid
 import pytz
 from loguru import logger
+
 from email_validator import validate_email, EmailNotValidError
 
 from src.configurations import Configurations
@@ -33,3 +34,4 @@ def check_email(email: str) -> Optional[str]:
         logger.exception("Invalid email address: {e}")
     finally:
         return email_normalized
+
