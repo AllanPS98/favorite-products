@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from src.common.auth import admin_required, normal_user_required
 from src.controller.customer import CustomerController
-from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
+from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse
+from src.schema.customer import DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse
+from src.schema.customer import DeleteCustomerSuccessResponse, GetCustomerErrorResponse
+from src.schema.customer import GetCustomerNotFoundResponse, PostCustomerPayload
+from src.schema.customer import PostLoginErrorResponse, PostLoginResponse, UpdateCustomerErrorResponse
+from src.schema.customer import UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
 
@@ -38,7 +43,16 @@ def create_customer(payload: PostCustomerPayload):
     summary="Authenticate a customer",
     responses={
         200: {
-            "description": "Customer authenticated successfully"
+            "description": "Customer authenticated successfully",
+            "model": PostLoginResponse
+        },
+        401: {
+            "description": "Invalid credentials",
+            "model": PostLoginErrorResponse
+        },
+        500: {
+            "description": "Failed to login",
+            "model": PostLoginErrorResponse
         }
     }
 )

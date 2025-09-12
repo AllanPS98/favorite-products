@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from src.common.auth import normal_user_required
 from src.controller.favorite import FavoriteController
 from src.schema.customer import GetCustomerErrorResponse
-from src.schema.favorite import PostFavoritePayload, RemoveFavoriteErrorResponse, RemoveFavoriteSuccessResponse, SetFavoriteErrorResponse, SetFavoriteSuccessResponse
-from src.schema.favorite import GetFavoriteParams
-from src.schema.favorite import ListFavoriteResponse
-from src.schema.favorite import DeleteFavoriteParams
+from src.schema.favorite import PostFavoritePayload, RemoveFavoriteErrorResponse
+from src.schema.favorite import SetFavoriteErrorResponse, SetFavoriteSuccessResponse
+from src.schema.favorite import GetFavoriteParams, RemoveFavoriteSuccessResponse
+from src.schema.favorite import ListFavoriteResponse, DeleteFavoriteParams
 
 router = APIRouter(prefix="/favorites")
 

@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 from requests import Session
 from loguru import logger
 from src.configurations import Configurations
+from src.constants import APPLICATION_JSON
 
 configurations = Configurations()
 
@@ -12,7 +13,7 @@ class FakeStore:
         self.url = configurations.FAKE_STORE_URL
         self.session = Session()
         self.headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': APPLICATION_JSON
         }
     
     def get_products(self) -> Optional[List[Dict]]:

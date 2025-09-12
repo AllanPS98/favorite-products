@@ -58,7 +58,7 @@ Para rodar os testes automatizados:
 pytest
 ```
 
-OBS: Quando for rodar os testes, no `.env` mude o campo `DB_HOST="localhost"` e `MODE="test"`
+OBS: Quando for rodar os testes, no `.env` mude o campo `DB_HOST="localhost"` e `MODE="test"`. Como são testes end-to-end, a instância do banco no docker deve estar online.
 
 ## 🔧 Como Usar Sem o Docker Compose
 
@@ -68,7 +68,7 @@ OBS: Quando for rodar os testes, no `.env` mude o campo `DB_HOST="localhost"` e 
 dotenv run -- python src/main.py
 ```
 
-- OBS: O banco do docker compose deve estar rodando e no `.env` mude o campo `DB_HOST="localhost"`.
+- OBS: A instância do banco no docker deve estar online e no `.env` mude o campo `DB_HOST="localhost"`.
 
 2. Acesse a documentação interativa no navegador:
 

@@ -1,5 +1,8 @@
 from fastapi import APIRouter
-from src.schema.product import GetAllProductsErrorResponse, GetAllProductsParams, GetProductByApiIdErrorResponse, GetProductByApiIdNotFoundResponse, GetProductByApiIdParams, GetProductErrorResponse, GetProductNotFoundResponse, GetProductResponse, ListProductResponse
+from src.schema.product import GetAllProductsErrorResponse, GetAllProductsParams
+from src.schema.product import GetProductByApiIdErrorResponse, GetProductByApiIdNotFoundResponse
+from src.schema.product import GetProductByApiIdParams, GetProductErrorResponse
+from src.schema.product import GetProductNotFoundResponse, GetProductResponse, ListProductResponse
 from src.controller.product import ProductController
 
 router = APIRouter(prefix="/products")

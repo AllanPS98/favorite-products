@@ -1,4 +1,3 @@
-from typing import Dict, List
 from http import HTTPStatus
 from fastapi import Response
 from loguru import logger
@@ -7,7 +6,9 @@ from src.common.functions import get_uuid
 from src.integration.fake_store import FakeStore
 from src.database.database import Database
 from src.model.product import Product
-from src.schema.product import GetAllProductsErrorResponse, GetAllProductsParams, GetProductByApiIdErrorResponse, GetProductByApiIdNotFoundResponse, GetProductByApiIdParams, GetProductErrorResponse, GetProductNotFoundResponse, GetProductResponse, ListProductResponse
+from src.schema.product import GetAllProductsErrorResponse, GetAllProductsParams, GetProductByApiIdErrorResponse
+from src.schema.product import GetProductByApiIdNotFoundResponse, GetProductByApiIdParams, GetProductErrorResponse
+from src.schema.product import GetProductNotFoundResponse, GetProductResponse, ListProductResponse
 from src.constants import APPLICATION_JSON
 
 

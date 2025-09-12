@@ -46,6 +46,23 @@ class CustomerController:
         success = CreateCustomerSuccessResponse(customer_id=str(customer_model.customer_id))
         logger.info(success.message)
         return success
+
+    def __verify_credentials(self, email: str, password: str) -> Customer | InvalidCredentialsError:
+        customer = self.__database.customers.get_by_email(email)
+        if not customer or not verify_password(password, customer.encrypted_password):
+            raise InvalidCredentialsError("Invalid credentials")
+        return customer
+
+    def __create_access_token(self, customer: Customer) -> PostLoginResponse:
+        access_token = create_access_token(
+            data={"sub": str(customer.customer_id), "role": customer.role},
+            expires_delta=timedelta(minutes=configurations.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+        success = PostLoginResponse(
+            access_token=access_token,
+            token_type="bearer"
+        )
+        return success
     
     def create_customer(self, customer_data: PostCustomerPayload) -> Response:
         try:
@@ -72,18 +89,8 @@ class CustomerController:
     
     def authenticate_customer(self, email: str, password: str) -> Dict[str, str]:
         try:
-            customer = self.__database.customers.get_by_email(email)
-            if not customer or not verify_password(password, customer.encrypted_password):
-                raise InvalidCredentialsError("Invalid credentials")
-            
-            access_token = create_access_token(
-                data={"sub": str(customer.customer_id), "role": customer.role},
-                expires_delta=timedelta(minutes=configurations.ACCESS_TOKEN_EXPIRE_MINUTES)
-            )
-            success = PostLoginResponse(
-                access_token=access_token,
-                token_type="bearer"
-            )
+            customer = self.__verify_credentials(email, password)
+            success = self.__create_access_token(customer)
             response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
         except InvalidCredentialsError as invalid_credentials_error:
             error = PostLoginErrorResponse().model_dump_json()
