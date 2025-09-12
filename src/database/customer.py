@@ -36,7 +36,7 @@ class CustomerDatabase:
             session.commit()
     
     def delete_all_customers(self):
-        if configurations.TEST_MODE:
+        if configurations.MODE:
             with self.database_session as session:
                 session.query(Customer).delete()
                 session.commit()

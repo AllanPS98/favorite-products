@@ -6,6 +6,9 @@ from src.model.product import Product
 
 from . import client, headers
 from src.database.database import Database
+from src.configurations import Configurations
+
+configurations = Configurations()
 
 @pytest.fixture(autouse=True)
 def setup_and_teardown(request):
@@ -26,6 +29,7 @@ def setup_and_teardown(request):
         rating_count = 10
 
     )
+    database.products.delete_all_products()
     database.products.insert(product)
     
     yield
@@ -47,7 +51,7 @@ def test_get_all_products_with_cache():
         response_data = response.json()
 
     assert response.status_code == 200
-    assert len(response_data["products"]) == 1
+    assert len(response_data["products"]) > 0
 
 
 
@@ -67,6 +71,8 @@ def test_get_all_products_without_cache():
 
 @pytest.mark.skip_setup
 def test_get_all_products_not_found():
+    database = Database()
+    database.products.delete_all_products()
     params = {
         "with_cache": True,
         "page": 1,

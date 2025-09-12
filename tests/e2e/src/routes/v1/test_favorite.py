@@ -6,8 +6,11 @@ from src.model.customer import Customer
 from src.model.favorite import Favorite
 from src.model.product import Product
 
-from . import client, headers
+from . import client, do_login, headers
 from src.database.database import Database
+from src.configurations import Configurations
+
+configurations = Configurations()
 
 @pytest.fixture(autouse=True)
 def setup_and_teardown():
@@ -15,7 +18,8 @@ def setup_and_teardown():
     database = Database()
     customer = Customer(
         name="Initial Test",
-        email="initialtest@gmail.com"
+        email="initialtest@gmail.com",
+        encrypted_password="test1234"
     )
     product = Product(
         product_api_id=-1,
@@ -28,8 +32,11 @@ def setup_and_teardown():
         rating_count = 10
 
     )
+    database.customers.delete_all_customers()
+    database.products.delete_all_products()
     database.customers.insert(customer)
     database.products.insert(product)
+    do_login()
     
     yield
     logger.info("Cleaning customer table after test...")

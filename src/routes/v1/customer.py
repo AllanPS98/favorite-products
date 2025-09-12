@@ -90,7 +90,7 @@ def update_to_admin(customer_email: str, user = Depends(admin_required)):
         }
     }
 )
-def get_customer(customer_id: str, user = Depends(admin_required)):
+def get_customer(customer_id: str, user = Depends(normal_user_required)):
     controller = CustomerController()
     response_data = controller.get_customer(customer_id)
     return response_data

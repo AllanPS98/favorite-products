@@ -8,7 +8,7 @@ from src.common.functions import get_uuid, check_email
 from src.common.auth import hash_password, verify_password, create_access_token
 from src.database.database import Database
 from src.model.customer import Customer
-from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, PostLoginResponse, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
+from src.schema.customer import CreateCustomerErrorResponse, CustomerInvalidEmailResponse, CreateCustomerSuccessResponse, DeleteCustomerErrorResponse, DeleteCustomerNotFoundResponse, DeleteCustomerSuccessResponse, GetCustomerErrorResponse, GetCustomerNotFoundResponse, PostCustomerPayload, PostLoginErrorResponse, PostLoginResponse, UpdateCustomerErrorResponse, UpdateCustomerNotFoundResponse, UpdateCustomerSuccessResponse
 from src.schema.customer import GetCustomerResponse
 from src.schema.customer import PutCustomerPayload
 from src.schema.exceptions import DuplicateEmailError, InvalidCredentialsError, InvalidEmailError
@@ -71,20 +71,31 @@ class CustomerController:
             return response
     
     def authenticate_customer(self, email: str, password: str) -> Dict[str, str]:
-        customer = self.__database.customers.get_by_email(email)
-        if not customer or not verify_password(password, customer.encrypted_password):
-            raise InvalidCredentialsError("Invalid credentials")
-        
-        access_token = create_access_token(
-            data={"sub": str(customer.customer_id), "role": customer.role},
-            expires_delta=timedelta(minutes=configurations.ACCESS_TOKEN_EXPIRE_MINUTES)
-        )
-        success = PostLoginResponse(
-            access_token=access_token,
-            token_type="bearer"
-        )
-        response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
-        return response
+        try:
+            customer = self.__database.customers.get_by_email(email)
+            if not customer or not verify_password(password, customer.encrypted_password):
+                raise InvalidCredentialsError("Invalid credentials")
+            
+            access_token = create_access_token(
+                data={"sub": str(customer.customer_id), "role": customer.role},
+                expires_delta=timedelta(minutes=configurations.ACCESS_TOKEN_EXPIRE_MINUTES)
+            )
+            success = PostLoginResponse(
+                access_token=access_token,
+                token_type="bearer"
+            )
+            response = Response(content=success.model_dump_json(), media_type=APPLICATION_JSON, status_code=HTTPStatus.OK)
+        except InvalidCredentialsError as invalid_credentials_error:
+            error = PostLoginErrorResponse().model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.UNAUTHORIZED)
+            logger.exception(f"{error.error}: {invalid_credentials_error}")
+        except Exception as e:
+            message = "Failed to login"
+            error = PostLoginErrorResponse(error=message).model_dump_json()
+            response = Response(content=error, media_type=APPLICATION_JSON, status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+            logger.exception(f"{message}: {e}")
+        finally:
+            return response
     
     def update_to_admin(self, email: str) -> Response:
         try:

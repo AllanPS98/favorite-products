@@ -19,6 +19,9 @@ class PostLoginResponse(BaseModel):
     access_token: str
     token_type: str
 
+class PostLoginErrorResponse(BaseModel):
+    error: str = "Invalid credentials"
+
 class CreateCustomerSuccessResponse(BaseModel):
     message: str = "Customer created successfully"
     customer_id: str = "uuid"

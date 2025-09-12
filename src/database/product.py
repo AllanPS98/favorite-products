@@ -59,7 +59,7 @@ class ProductDatabase:
             session.commit()
     
     def delete_all_products(self):
-        if configurations.TEST_MODE:
+        if configurations.MODE:
             with self.database_session as session:
                 session.query(Product).delete()
                 session.commit()
